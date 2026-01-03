@@ -46,7 +46,7 @@ toml_edit = "0.23.9"
 walkdir = "2.5.0"
 
 [build-dependencies]
-cargo-version-info = { version = "0.0.2", default-features = false }
+cargo-version-info = { version = "0.0.3", default-features = false }
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = [
