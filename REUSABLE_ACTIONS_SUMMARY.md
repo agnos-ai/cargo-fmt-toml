@@ -2,7 +2,7 @@
 
 ## ✅ What Was Copied
 
-I've copied three reusable composite actions from `dr-rs-ekg` to:
+I've copied three reusable composite actions to:
 
 - **cargo-fmt-toml**
 - **cargo-version-info**
@@ -11,8 +11,6 @@ I've copied three reusable composite actions from `dr-rs-ekg` to:
 ## 📦 Actions Copied
 
 ### 1. setup-cargo-binstall
-
-**Source:** `dr-rs-ekg/.github/actions/setup-cargo-binstall/`
 
 **What it does:**
 
@@ -36,8 +34,6 @@ I've copied three reusable composite actions from `dr-rs-ekg` to:
 ---
 
 ### 2. setup-cocogitto
-
-**Source:** `dr-rs-ekg/.github/actions/setup-cocogitto/`
 
 **What it does:**
 
@@ -72,11 +68,6 @@ I've copied three reusable composite actions from `dr-rs-ekg` to:
 ---
 
 ### 3. generate-changelog
-
-**Source:**
-
-- `dr-rs-ekg/.github/actions/generate-changelog/`
-- `dr-rs-ekg/.bash/gha-generate-changelog.sh`
 
 **What it does:**
 
@@ -212,7 +203,7 @@ All three repositories now share the same actions:
 
 When updating an action:
 
-1. Update in `dr-rs-ekg` (source of truth)
+1. Update in one repository (preferably the first to need the change)
 2. Copy to other repositories
 3. All repos stay consistent
 
