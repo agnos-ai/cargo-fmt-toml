@@ -38,12 +38,11 @@ clap = { version = "4.5.53", default-features = false, features = [
     "env",
     "std",
 ] }
-indicatif = "0.18.3"
 serde = { version = "1", features = ["derive"] }
 taplo = "0.14.0"
 toml = "0.9.8"
 toml_edit = "0.24.0"
-walkdir = "2.5.0"
+cargo-plugin-utils = { path = "../cargo-plugin-utils" }
 
 [build-dependencies]
 cargo-version-info = { version = "0.0.3", default-features = false }

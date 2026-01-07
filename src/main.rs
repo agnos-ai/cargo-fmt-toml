@@ -17,11 +17,8 @@ use anyhow::{
     Context,
     Result,
 };
+use cargo_plugin_utils::ProgressLogger;
 use clap::Parser;
-use indicatif::{
-    ProgressBar,
-    ProgressStyle,
-};
 use toml_edit::{
     DocumentMut,
     InlineTable,
@@ -29,7 +26,6 @@ use toml_edit::{
     Table,
     Value,
 };
-use walkdir::WalkDir;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -75,95 +71,17 @@ fn main() -> Result<()> {
     }
 }
 
-/// Logger for handling output with quiet mode and cargo-style ephemeral
-/// messages
-struct Logger {
-    quiet: bool,
-    progress: Option<ProgressBar>,
-}
-
-impl Logger {
-    fn new(quiet: bool) -> Self {
-        Self {
-            quiet,
-            progress: None,
-        }
-    }
-
-    /// Set a status message with a progress bar (ephemeral, like cargo's
-    /// "Compiling")
-    fn set_progress(&mut self, total: u64) {
-        if !self.quiet {
-            let pb = ProgressBar::new(total);
-            pb.set_style(
-                ProgressStyle::default_bar()
-                    .template("{spinner:.green} {msg} [{bar:40.cyan/blue}] {pos}/{len}")
-                    .unwrap()
-                    .progress_chars("#>-"),
-            );
-            self.progress = Some(pb);
-        }
-    }
-
-    /// Update progress status message
-    fn set_message(&self, msg: &str) {
-        if let Some(pb) = &self.progress {
-            pb.set_message(msg.to_string());
-        }
-    }
-
-    /// Increment progress
-    fn inc(&self) {
-        if let Some(pb) = &self.progress {
-            pb.inc(1);
-        }
-    }
-
-    /// Print a permanent message (will be kept in output)
-    fn println(&mut self, msg: &str) {
-        if !self.quiet {
-            // If we have an active progress bar, suspend it while printing
-            if let Some(pb) = &self.progress {
-                pb.suspend(|| {
-                    println!("{}", msg);
-                });
-            } else {
-                println!("{}", msg);
-            }
-        }
-    }
-
-    /// Clear/finish the progress bar
-    fn finish(&mut self) {
-        if let Some(pb) = self.progress.take() {
-            if self.quiet {
-                // In quiet mode, clear everything (like cargo)
-                pb.finish_and_clear();
-            } else {
-                // In normal mode, keep the output
-                pb.finish_and_clear();
-            }
-        }
-    }
-}
-
 fn fmt_toml(args: FmtArgs) -> Result<()> {
-    let mut logger = Logger::new(args.quiet);
+    let mut logger = ProgressLogger::new(args.quiet);
 
-    let crates_dir = args.workspace_path.join("crates");
-    let mut crate_manifests = Vec::new();
+    // Use cargo_metadata to get all workspace packages
+    let packages =
+        cargo_plugin_utils::get_workspace_packages(Some(&args.workspace_path.join("Cargo.toml")))?;
 
-    for entry in WalkDir::new(&crates_dir)
-        .min_depth(2)
-        .max_depth(2)
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
-        let path = entry.path();
-        if path.file_name() == Some("Cargo.toml".as_ref()) {
-            crate_manifests.push(path.to_path_buf());
-        }
-    }
+    let crate_manifests: Vec<PathBuf> = packages
+        .iter()
+        .map(|pkg| pkg.manifest_path.as_std_path().to_path_buf())
+        .collect();
 
     let mut total_changes = 0;
     let mut files_changed = 0;
@@ -208,7 +126,11 @@ fn fmt_toml(args: FmtArgs) -> Result<()> {
     Ok(())
 }
 
-fn format_manifest(manifest_path: &Path, args: &FmtArgs, logger: &mut Logger) -> Result<usize> {
+fn format_manifest(
+    manifest_path: &Path,
+    args: &FmtArgs,
+    logger: &mut ProgressLogger,
+) -> Result<usize> {
     let content = std::fs::read_to_string(manifest_path)
         .context(format!("Failed to read {:?}", manifest_path))?;
 
@@ -265,7 +187,7 @@ fn format_manifest(manifest_path: &Path, args: &FmtArgs, logger: &mut Logger) ->
     Ok(changes)
 }
 
-fn collapse_nested_tables(doc: &mut DocumentMut, logger: &mut Logger) -> Result<usize> {
+fn collapse_nested_tables(doc: &mut DocumentMut, logger: &mut ProgressLogger) -> Result<usize> {
     let mut changes = 0;
 
     if let Some(package) = doc.get_mut("package").and_then(|p| p.as_table_mut()) {
@@ -351,7 +273,7 @@ fn collapse_table_entries(table: &mut Table) -> usize {
     changes
 }
 
-fn reorder_sections(doc: &mut DocumentMut, logger: &mut Logger) -> Result<usize> {
+fn reorder_sections(doc: &mut DocumentMut, logger: &mut ProgressLogger) -> Result<usize> {
     // Define the desired section order
     let section_order = vec![
         "package",
@@ -456,7 +378,7 @@ fn reorder_sections(doc: &mut DocumentMut, logger: &mut Logger) -> Result<usize>
     Ok(1)
 }
 
-fn format_package_section(doc: &mut DocumentMut, logger: &mut Logger) -> Result<usize> {
+fn format_package_section(doc: &mut DocumentMut, logger: &mut ProgressLogger) -> Result<usize> {
     let mut changes = 0;
 
     if let Some(package) = doc.get_mut("package").and_then(|p| p.as_table_mut()) {
@@ -513,7 +435,11 @@ fn format_package_section(doc: &mut DocumentMut, logger: &mut Logger) -> Result<
     Ok(changes)
 }
 
-fn sort_dependencies(doc: &mut DocumentMut, section: &str, logger: &mut Logger) -> Result<usize> {
+fn sort_dependencies(
+    doc: &mut DocumentMut,
+    section: &str,
+    logger: &mut ProgressLogger,
+) -> Result<usize> {
     if let Some(deps) = doc.get_mut(section).and_then(|d| d.as_table_mut()) {
         sort_table_in_place(deps, logger)
     } else {
@@ -521,7 +447,7 @@ fn sort_dependencies(doc: &mut DocumentMut, section: &str, logger: &mut Logger) 
     }
 }
 
-fn sort_table_in_place(table: &mut Table, logger: &mut Logger) -> Result<usize> {
+fn sort_table_in_place(table: &mut Table, logger: &mut ProgressLogger) -> Result<usize> {
     let current_keys: Vec<String> = table.iter().map(|(k, _)| k.to_string()).collect();
     let mut sorted_keys = current_keys.clone();
     sorted_keys.sort();
