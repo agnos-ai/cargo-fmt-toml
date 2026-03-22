@@ -32,8 +32,8 @@ name = "cargo-fmt-toml"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1.0.100"
-clap = { version = "4.5.53", default-features = false, features = [
+anyhow = "1.0.102"
+clap = { version = "4.5.60", default-features = false, features = [
     "derive",
     "env",
     "std",
