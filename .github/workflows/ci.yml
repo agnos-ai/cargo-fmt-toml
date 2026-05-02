@@ -11,5 +11,3 @@ jobs:
     uses: dataroadinc/github-actions/.github/workflows/cargo-crate-ci.yml@main
     with:
       crate-name: cargo-fmt-toml
-      kind: binary
-    secrets: inherit
