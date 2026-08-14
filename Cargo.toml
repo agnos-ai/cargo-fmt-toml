@@ -1,16 +1,16 @@
 [package]
 name = "cargo-fmt-toml"
 description = "Cargo subcommand to format and normalize Cargo.toml layout (section order, sorted dep keys, TOML shape)"
-version = "0.0.16"
+version = "0.0.17"
 edition = "2024"
-license-file = "LICENSE"
+license = "MIT OR Apache-2.0"
 keywords = ["cargo", "toml", "format", "cli", "workspace"]
 categories = ["command-line-utilities", "development-tools"]
 readme = "README.md"
 authors = ["Jacobus Geluk <jacobus@dataroad.com>"]
-repository = "https://github.com/dataroadinc/cargo-fmt-toml"
+repository = "https://github.com/legra-ai/cargo-fmt-toml"
 documentation = "https://docs.rs/cargo-fmt-toml"
-homepage = "https://github.com/dataroadinc/cargo-fmt-toml"
+homepage = "https://github.com/legra-ai/cargo-fmt-toml"
 rust-version = "1.93.0"
 publish = true
 
@@ -32,17 +32,17 @@ name = "cargo-fmt-toml"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1.0.100"
+anyhow = "1.0.104"
 cargo_metadata = "0.23.1"
-clap = { version = "4.5.53", features = ["derive", "env"] }
+clap = { version = "4.6.6", features = ["derive", "env"] }
 serde = { version = "1", features = ["derive"] }
 taplo = "0.14.0"
-toml = "0.9.8"
-toml_edit = "0.24.0"
-cargo-plugin-utils = "0.0.8"
+toml = "1.1.4"
+toml_edit = "0.25.13"
+cargo-plugin-utils = "0.0.10"
 
 [build-dependencies]
-cargo-version-info = { version = "0.0.9", default-features = false }
+cargo-version-info = { version = "0.0.19", default-features = false }
 sloughi = "0.3"
 
 [dev-dependencies]

@@ -44,7 +44,7 @@ merge.
 
 2. Add to GitHub repository secrets:
    - Go to:
-     https://github.com/dataroadinc/cargo-fmt-toml/settings/secrets/actions
+     https://github.com/legra-ai/cargo-fmt-toml/settings/secrets/actions
    - Click "New repository secret"
    - Name: `CRATES_IO_TOKEN`
    - Value: `<your-token-here>`
@@ -160,7 +160,7 @@ BREAKING CHANGE: Default output format changed from plain text to JSON
 
 After pushing your version bump:
 
-1. Go to: https://github.com/dataroadinc/cargo-fmt-toml/actions
+1. Go to: https://github.com/legra-ai/cargo-fmt-toml/actions
 2. Watch the "CI/CD" workflow
 3. The "Release" job will show:
    - Changelog generation
@@ -175,7 +175,7 @@ After the workflow completes:
 
 ```bash
 # Check the new release
-open https://github.com/dataroadinc/cargo-fmt-toml/releases
+open https://github.com/legra-ai/cargo-fmt-toml/releases
 
 # Check crates.io
 open https://crates.io/crates/cargo-fmt-toml
