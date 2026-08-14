@@ -1,7 +1,7 @@
 [package]
 name = "cargo-fmt-toml"
 description = "Cargo subcommand to format and normalize Cargo.toml layout (section order, sorted dep keys, TOML shape)"
-version = "0.0.17"
+version = "0.0.18"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 keywords = ["cargo", "toml", "format", "cli", "workspace"]
