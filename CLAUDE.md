@@ -87,7 +87,7 @@ cargo +nightly clippy --all-targets --all-features -- -D warnings -W missing-doc
 
 ## Code Style
 
-- **Rust Edition**: 2024, MSRV 1.92.0
+- **Rust Edition**: 2024, MSRV 1.94.1
 - **Formatting**: Uses nightly rustfmt with vertical imports grouped
   by std/external/crate
 - **Clippy**: Nightly with strict settings (max 120 lines/function,
