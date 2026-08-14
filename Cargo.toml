@@ -11,7 +11,7 @@ authors = ["Jacobus Geluk <jacobus@dataroad.com>"]
 repository = "https://github.com/legra-ai/cargo-fmt-toml"
 documentation = "https://docs.rs/cargo-fmt-toml"
 homepage = "https://github.com/legra-ai/cargo-fmt-toml"
-rust-version = "1.93.0"
+rust-version = "1.94.1"
 publish = true
 
 exclude = [
@@ -39,11 +39,11 @@ serde = { version = "1", features = ["derive"] }
 taplo = "0.14.0"
 toml = "1.1.4"
 toml_edit = "0.25.13"
-cargo-plugin-utils = "0.0.10"
+cargo-plugin-utils = "0.0.12"
 
 [build-dependencies]
-cargo-version-info = { version = "0.0.19", default-features = false }
-sloughi = "0.3"
+cargo-version-info = { version = "0.0.21", default-features = false }
+rhusky = "0.0.6"
 
 [dev-dependencies]
 
