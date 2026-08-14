@@ -2,15 +2,15 @@
 
 [![Crates.io](https://img.shields.io/crates/v/cargo-fmt-toml.svg)](https://crates.io/crates/cargo-fmt-toml)
 [![Documentation](https://docs.rs/cargo-fmt-toml/badge.svg)](https://docs.rs/cargo-fmt-toml)
-[![CI](https://github.com/dataroadinc/cargo-fmt-toml/workflows/CI%2FCD/badge.svg)](https://github.com/dataroadinc/cargo-fmt-toml/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/dataroadinc/cargo-fmt-toml/blob/main/LICENSE)
+[![CI](https://github.com/legra-ai/cargo-fmt-toml/actions/workflows/ci.yml/badge.svg)](https://github.com/legra-ai/cargo-fmt-toml/actions/workflows/ci.yml)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 [![Downloads](https://img.shields.io/crates/d/cargo-fmt-toml.svg)](https://crates.io/crates/cargo-fmt-toml)
 
 Cargo subcommand that **opinionatedly** formats and normalizes `Cargo.toml`
 **layout**: top-level table order, `[package]` field order, sorted dependency
 **keys**, and nested-table collapse.
 
-## This crate vs [`cargo-propagate-features`](https://github.com/dataroadinc/cargo-propagate-features)
+## This crate vs [`cargo-propagate-features`](https://github.com/legra-ai/cargo-propagate-features)
 
 | Expect from **cargo-fmt-toml** | Expect from **cargo-propagate-features** |
 | --- | --- |
@@ -68,7 +68,7 @@ cargo install cargo-fmt-toml
 If the crate is not yet on crates.io, install from git:
 
 ```bash
-cargo install --git https://github.com/dataroadinc/cargo-fmt-toml
+cargo install --git https://github.com/legra-ai/cargo-fmt-toml
 ```
 
 ### Network / offline Cargo config
@@ -95,7 +95,7 @@ CARGO_NET_OFFLINE=false cargo install cargo-fmt-toml
 Workspace dependency policy (centralizing versions, `workspace = true` refactors)
 and **feature propagation** are out of scope here; see the table in
 [This crate vs cargo-propagate-features](#this-crate-vs-cargo-propagate-features)
-and [`cargo-propagate-features`](https://github.com/dataroadinc/cargo-propagate-features).
+and [`cargo-propagate-features`](https://github.com/legra-ai/cargo-propagate-features).
 
 ## Usage
 
@@ -133,7 +133,7 @@ description = "Brief description"
 authors = { workspace = true }
 edition = { workspace = true }
 rust-version = { workspace = true }
-license-file = { workspace = true }
+license = { workspace = true }
 readme = { workspace = true }
 ```
 
@@ -159,3 +159,10 @@ fmt-toml:
 check-fmt-toml:
 	cargo fmt-toml --check
 ```
+
+## License
+
+Copyright © 2026 DataRoad Inc, Delaware, USA, trading as Legra.
+
+Licensed under either the [MIT license](LICENSE-MIT) or the
+[Apache License, Version 2.0](LICENSE-APACHE), at your option.

@@ -3,14 +3,14 @@ name = "cargo-fmt-toml"
 description = "Cargo subcommand to format and normalize Cargo.toml layout (section order, sorted dep keys, TOML shape)"
 version = "0.0.16"
 edition = "2024"
-license-file = "LICENSE"
+license = "MIT OR Apache-2.0"
 keywords = ["cargo", "toml", "format", "cli", "workspace"]
 categories = ["command-line-utilities", "development-tools"]
 readme = "README.md"
 authors = ["Jacobus Geluk <jacobus@dataroad.com>"]
-repository = "https://github.com/dataroadinc/cargo-fmt-toml"
+repository = "https://github.com/legra-ai/cargo-fmt-toml"
 documentation = "https://docs.rs/cargo-fmt-toml"
-homepage = "https://github.com/dataroadinc/cargo-fmt-toml"
+homepage = "https://github.com/legra-ai/cargo-fmt-toml"
 rust-version = "1.93.0"
 publish = true
 
