@@ -35,10 +35,10 @@ To ensure all commits are signed, configure branch protection rules:
 
 ```bash
 # Using GitHub CLI
-gh api repos/dataroadinc/cargo-fmt-toml/branches/main/protection
+gh api repos/legra-ai/cargo-fmt-toml/branches/main/protection
 
 # Or check in the web UI:
-# https://github.com/dataroadinc/cargo-fmt-toml/settings/branch_protection_rules
+# https://github.com/legra-ai/cargo-fmt-toml/settings/branch_protection_rules
 ```
 
 ### Required Branch Protection Rules

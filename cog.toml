@@ -14,7 +14,7 @@ path = "CHANGELOG.md"
 template = "remote"
 remote = "github.com"
 repository = "cargo-fmt-toml"
-owner = "dataroadinc"
+owner = "legra-ai"
 authors = [{ username = "jgeluk", signature = "Jacobus Geluk" }]
 
 [commit_types]
