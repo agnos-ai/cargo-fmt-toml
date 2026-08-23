@@ -32,6 +32,7 @@ name = "cargo-fmt-toml"
 path = "src/main.rs"
 
 [dependencies]
+async-fs-io = "0.1.5"
 anyhow = "1.0.104"
 cargo_metadata = "0.23.1"
 clap = { version = "4.6.6", features = ["derive", "env"] }
@@ -40,6 +41,7 @@ taplo = "0.14.0"
 toml = "1.1.4"
 toml_edit = "0.25.13"
 cargo-plugin-utils = "0.0.12"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 [build-dependencies]
 cargo-version-info = { version = "0.0.21", default-features = false }
