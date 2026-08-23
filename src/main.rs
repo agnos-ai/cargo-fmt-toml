@@ -1462,8 +1462,7 @@ disallowed-types = [\"serde_json::Value\"]
             16 * 1024 * 1024,
         )
         .await
-        .expect("read test file")
-        else {
+        .expect("read test file") else {
             // Skip if the test file doesn't exist
             return;
         };
