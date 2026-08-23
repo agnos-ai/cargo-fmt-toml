@@ -31,6 +31,12 @@ use anyhow::{
     Context,
     Result,
 };
+use async_fs_io::{
+    canonicalize,
+    read_string_bounded,
+    symlink_metadata,
+    write_bytes,
+};
 use cargo_plugin_utils::ProgressLogger;
 use clap::Parser;
 use toml_edit::{
@@ -140,13 +146,14 @@ struct FmtArgs {
     quiet: bool,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     match CargoFmtTomlCli::parse() {
-        CargoFmtTomlCli::FmtToml(args) => fmt_toml(args),
+        CargoFmtTomlCli::FmtToml(args) => fmt_toml(args).await,
     }
 }
 
-fn try_git_worktree_root(start: &Path) -> Option<PathBuf> {
+async fn try_git_worktree_root(start: &Path) -> Option<PathBuf> {
     let output = std::process::Command::new("git")
         .args(["rev-parse", "--show-toplevel"])
         .current_dir(start)
@@ -160,18 +167,18 @@ fn try_git_worktree_root(start: &Path) -> Option<PathBuf> {
     if root.is_empty() {
         return None;
     }
-    Path::new(root).canonicalize().ok()
+    canonicalize(root).await.ok()
 }
 
 /// `Cargo.toml` paths for workspace members only (`cargo metadata --no-deps`),
 /// restricted to the canonical workspace directory and (when inside a git work
 /// tree) to that repository root. Refuses crates.io checkout paths.
-fn workspace_member_manifest_paths(workspace_root: &Path) -> Result<Vec<PathBuf>> {
-    let workspace_root = workspace_root
-        .canonicalize()
+async fn workspace_member_manifest_paths(workspace_root: &Path) -> Result<Vec<PathBuf>> {
+    let workspace_root = canonicalize(workspace_root)
+        .await
         .with_context(|| format!("could not canonicalize workspace {:?}", workspace_root))?;
 
-    let repo_root = try_git_worktree_root(&workspace_root);
+    let repo_root = try_git_worktree_root(&workspace_root).await;
     if let Some(ref rr) = repo_root
         && !workspace_root.starts_with(rr)
     {
@@ -183,7 +190,11 @@ fn workspace_member_manifest_paths(workspace_root: &Path) -> Result<Vec<PathBuf>
     }
 
     let manifest_path = workspace_root.join("Cargo.toml");
-    if !manifest_path.is_file() {
+    if !symlink_metadata(&manifest_path)
+        .await
+        .with_context(|| format!("could not inspect manifest {:?}", manifest_path))?
+        .is_file()
+    {
         anyhow::bail!(
             "not a Cargo workspace root (missing {}): use --workspace-path",
             manifest_path.display()
@@ -199,8 +210,8 @@ fn workspace_member_manifest_paths(workspace_root: &Path) -> Result<Vec<PathBuf>
     let mut paths: Vec<PathBuf> = Vec::new();
     for pkg in metadata.packages {
         let path = pkg.manifest_path.as_std_path();
-        let canonical = path
-            .canonicalize()
+        let canonical = canonicalize(path)
+            .await
             .with_context(|| format!("could not canonicalize manifest path {}", path.display()))?;
 
         if !canonical.starts_with(&workspace_root) {
@@ -237,10 +248,10 @@ fn workspace_member_manifest_paths(workspace_root: &Path) -> Result<Vec<PathBuf>
     Ok(paths)
 }
 
-fn fmt_toml(args: FmtArgs) -> Result<()> {
+async fn fmt_toml(args: FmtArgs) -> Result<()> {
     let mut logger = ProgressLogger::new(args.quiet);
 
-    let crate_manifests = workspace_member_manifest_paths(&args.workspace_path)?;
+    let crate_manifests = workspace_member_manifest_paths(&args.workspace_path).await?;
 
     // Phase 1: Format all manifests and collect results.
     // No files are written yet — if any manifest fails to format,
@@ -252,7 +263,7 @@ fn fmt_toml(args: FmtArgs) -> Result<()> {
 
     for manifest_path in &crate_manifests {
         logger.inc();
-        let (output, changes) = format_manifest(manifest_path, &mut logger)?;
+        let (output, changes) = format_manifest(manifest_path, &mut logger).await?;
         if changes > 0 {
             results.push((manifest_path.clone(), output, changes));
         }
@@ -265,7 +276,9 @@ fn fmt_toml(args: FmtArgs) -> Result<()> {
     // Phase 2: Write all formatted files to disk.
     if !args.dry_run && !args.check {
         for (path, output, changes) in &results {
-            std::fs::write(path, output).context(format!("Failed to write {:?}", path))?;
+            write_bytes(path, output.as_bytes())
+                .await
+                .context(format!("Failed to write {:?}", path))?;
             logger.println(&format!("\n📦 {}", path.display()));
             logger.println(&format!("   💾 Formatted with {} changes", changes));
         }
@@ -305,8 +318,12 @@ fn fmt_toml(args: FmtArgs) -> Result<()> {
 
 /// Format a single manifest and return the formatted output string
 /// along with the number of changes made. Does NOT write to disk.
-fn format_manifest(manifest_path: &Path, logger: &mut ProgressLogger) -> Result<(String, usize)> {
-    let content = std::fs::read_to_string(manifest_path)
+async fn format_manifest(
+    manifest_path: &Path,
+    logger: &mut ProgressLogger,
+) -> Result<(String, usize)> {
+    let content = read_string_bounded(manifest_path, 16 * 1024 * 1024)
+        .await
         .context(format!("Failed to read {:?}", manifest_path))?;
 
     let mut doc = content
@@ -674,20 +691,22 @@ workspace = true
         );
     }
 
-    #[test]
-    fn git_worktree_root_absent_without_repository() {
-        let base =
-            std::env::temp_dir().join(format!("cargo-fmt-toml-no-git-{}", std::process::id()));
-        std::fs::create_dir_all(&base).expect("mkdir");
-        assert!(try_git_worktree_root(&base).is_none());
-        let _ = std::fs::remove_dir_all(&base);
+    #[tokio::test]
+    async fn git_worktree_root_absent_without_repository() {
+        let base = async_fs_io::TempDir::create(std::env::temp_dir())
+            .await
+            .expect("create temporary directory");
+        assert!(try_git_worktree_root(base.path()).await.is_none());
+        base.remove().await.expect("remove temporary directory");
     }
 
-    #[test]
-    fn workspace_member_manifest_paths_excludes_registry_crates() {
+    #[tokio::test]
+    async fn workspace_member_manifest_paths_excludes_registry_crates() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let root = root.canonicalize().expect("canonicalize crate root");
-        let paths = workspace_member_manifest_paths(&root).expect("metadata");
+        let root = canonicalize(root).await.expect("canonicalize crate root");
+        let paths = workspace_member_manifest_paths(&root)
+            .await
+            .expect("metadata");
         assert_eq!(
             paths.len(),
             1,
@@ -1434,16 +1453,20 @@ disallowed-types = [\"serde_json::Value\"]
         );
     }
 
-    #[test]
-    fn reorder_actual_test_file() {
+    #[tokio::test]
+    async fn reorder_actual_test_file() {
         // Test with the actual file content from /tmp that triggers
         // the parse error.
-        let input =
-            std::fs::read_to_string("/tmp/cargo-fmt-toml-test-case.toml").unwrap_or_default();
-        if input.is_empty() {
+        let Some(input) = async_fs_io::read_string_bounded_if_exists(
+            "/tmp/cargo-fmt-toml-test-case.toml",
+            16 * 1024 * 1024,
+        )
+        .await
+        .expect("read test file")
+        else {
             // Skip if the test file doesn't exist
             return;
-        }
+        };
         let result = full_format(&input);
 
         // Verify the output is valid TOML
